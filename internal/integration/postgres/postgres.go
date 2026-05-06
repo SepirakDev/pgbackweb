@@ -135,6 +135,11 @@ type DumpParams struct {
 
 	// NoComments (--no-comments): Do not dump comments.
 	NoComments bool
+
+	// ExcludeTables (--exclude-table=PATTERN): Do not dump any tables matching
+	// any of the given pg_dump patterns. Each entry is passed as a separate
+	// --exclude-table flag.
+	ExcludeTables []string
 }
 
 // Dump runs the pg_dump command with the given parameters. It returns the SQL
@@ -165,6 +170,12 @@ func (Client) Dump(
 	}
 	if pickedParams.NoComments {
 		args = append(args, "--no-comments")
+	}
+	for _, table := range pickedParams.ExcludeTables {
+		if table == "" {
+			continue
+		}
+		args = append(args, "--exclude-table="+table)
 	}
 
 	errorBuffer := &bytes.Buffer{}

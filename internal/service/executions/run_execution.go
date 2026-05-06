@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/eduardolat/pgbackweb/internal/database/dbgen"
@@ -97,14 +98,23 @@ func (s *Service) RunExecution(ctx context.Context, backupID uuid.UUID) error {
 		})
 	}
 
+	excludeTables := []string{}
+	for _, line := range strings.Split(back.BackupExcludeTables, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			excludeTables = append(excludeTables, trimmed)
+		}
+	}
+
 	dumpReader := s.ints.PGClient.DumpZip(
 		pgVersion, back.DecryptedDatabaseConnectionString, postgres.DumpParams{
-			DataOnly:   back.BackupOptDataOnly,
-			SchemaOnly: back.BackupOptSchemaOnly,
-			Clean:      back.BackupOptClean,
-			IfExists:   back.BackupOptIfExists,
-			Create:     back.BackupOptCreate,
-			NoComments: back.BackupOptNoComments,
+			DataOnly:      back.BackupOptDataOnly,
+			SchemaOnly:    back.BackupOptSchemaOnly,
+			Clean:         back.BackupOptClean,
+			IfExists:      back.BackupOptIfExists,
+			Create:        back.BackupOptCreate,
+			NoComments:    back.BackupOptNoComments,
+			ExcludeTables: excludeTables,
 		},
 	)
 

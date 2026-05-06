@@ -38,6 +38,7 @@ func (h *handlers) editBackupHandler(c echo.Context) error {
 		OptIfExists    string `form:"opt_if_exists" validate:"required,oneof=true false"`
 		OptCreate      string `form:"opt_create" validate:"required,oneof=true false"`
 		OptNoComments  string `form:"opt_no_comments" validate:"required,oneof=true false"`
+		ExcludeTables  string `form:"exclude_tables"`
 	}
 	if err := c.Bind(&formData); err != nil {
 		return respondhtmx.ToastError(c, err.Error())
@@ -61,6 +62,7 @@ func (h *handlers) editBackupHandler(c echo.Context) error {
 			OptIfExists:    sql.NullBool{Bool: formData.OptIfExists == "true", Valid: true},
 			OptCreate:      sql.NullBool{Bool: formData.OptCreate == "true", Valid: true},
 			OptNoComments:  sql.NullBool{Bool: formData.OptNoComments == "true", Valid: true},
+			ExcludeTables:  sql.NullString{String: formData.ExcludeTables, Valid: true},
 		},
 	)
 	if err != nil {
@@ -245,6 +247,19 @@ func editBackupButton(backup dbgen.BackupsServicePaginateBackupsRow) nodx.Node {
 							Required: true,
 							Children: []nodx.Node{
 								yesNoOptions(backup.OptNoComments),
+							},
+						}),
+					),
+
+					nodx.Div(
+						nodx.Class("mt-2"),
+						component.TextareaControl(component.TextareaControlParams{
+							Name:        "exclude_tables",
+							Label:       "Exclude tables",
+							Placeholder: "public.audit_log",
+							HelpText:    "One table per line. Supports schema-qualified names and pg_dump patterns. Passed as --exclude-table to pg_dump.",
+							Children: []nodx.Node{
+								nodx.Text(backup.ExcludeTables),
 							},
 						}),
 					),

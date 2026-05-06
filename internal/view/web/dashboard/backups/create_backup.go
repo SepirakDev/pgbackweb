@@ -38,6 +38,7 @@ func (h *handlers) createBackupHandler(c echo.Context) error {
 		OptIfExists    string    `form:"opt_if_exists" validate:"required,oneof=true false"`
 		OptCreate      string    `form:"opt_create" validate:"required,oneof=true false"`
 		OptNoComments  string    `form:"opt_no_comments" validate:"required,oneof=true false"`
+		ExcludeTables  string    `form:"exclude_tables"`
 	}
 	if err := c.Bind(&formData); err != nil {
 		return respondhtmx.ToastError(c, err.Error())
@@ -65,6 +66,7 @@ func (h *handlers) createBackupHandler(c echo.Context) error {
 			OptIfExists:    formData.OptIfExists == "true",
 			OptCreate:      formData.OptCreate == "true",
 			OptNoComments:  formData.OptNoComments == "true",
+			ExcludeTables:  formData.ExcludeTables,
 		},
 	)
 	if err != nil {
@@ -300,6 +302,16 @@ func createBackupForm(
 					Children: []nodx.Node{
 						yesNoOptions(),
 					},
+				}),
+			),
+
+			nodx.Div(
+				nodx.Class("mt-2"),
+				component.TextareaControl(component.TextareaControlParams{
+					Name:        "exclude_tables",
+					Label:       "Exclude tables",
+					Placeholder: "public.audit_log",
+					HelpText:    "One table per line. Supports schema-qualified names and pg_dump patterns. Passed as --exclude-table to pg_dump.",
 				}),
 			),
 		),
